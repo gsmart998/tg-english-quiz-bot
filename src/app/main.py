@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 import telebot
 
 from database.database import Session, init_db
-from database.models import Users
+from database.crud import create_user
 
 
 load_dotenv()
@@ -19,6 +19,12 @@ def send_welcome(message):
     username = message.from_user.username
     user_id = message.from_user.id
     print(f"{name=} {last_name=} {username=} {user_id=}")
+    create_user(name=name, tg_id=user_id)
+
+
+@bot.message_handler(commands=["quiz"])
+def launch_quiz(message):
+    bot.reply_to(message, "Вы запустили квиз!")
 
 
 if __name__ == "__main__":
@@ -28,7 +34,7 @@ if __name__ == "__main__":
     #     if not users:
     #         print("users not found!")
     #     for user in users:
-    #         print(user.user_name)
+    #         print(f"{user.user_tg_id=} {user.user_name=}")
 
     print("Бот запущен...")
     bot.polling(none_stop=True)

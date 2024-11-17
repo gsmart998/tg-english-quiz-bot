@@ -9,12 +9,16 @@ Base = declarative_base()
 class Users(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    tg_user_id = Column(String(64), unique=True)
+    user_tg_id = Column(String(64), unique=True)
     user_name = Column(String(128))
-    user_score = Column(Integer())
+    user_score = Column(Integer, default=0)
 
     quiz_results = relationship("QuizResults", back_populates="user")
     user_translations = relationship("UserTranslations", back_populates="user")
+
+    def __init__(self, user_tg_id: str, user_name: str):
+        self.user_tg_id = user_tg_id
+        self.user_name = user_name
 
 
 class Translations(Base):

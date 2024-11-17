@@ -17,12 +17,8 @@ except Exception as ex:
 
 # create tables
 def init_db():
-    try:
-        Base.metadata.create_all(bind=engine)
-        print("БД инициализирована!")
-    except Exception as ex:
-        print(f"БД не инициализирована! Ошибка: {ex}")
-        raise
+    Base.metadata.create_all(bind=engine)
+    print("БД инициализирована!")
 
 
 Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)
