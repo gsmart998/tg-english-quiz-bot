@@ -2,9 +2,14 @@ import os
 
 from dotenv import load_dotenv
 import telebot
-
-from database.database import Session, init_db
-from database.crud import create_user
+from telebot.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    InlineKeyboardMarkup,
+    InlineKeyboardButton as IBtn,
+)
+from database.database import init_db
+from database.crud import create_user, get_translation, validate_translation
 
 
 load_dotenv()
@@ -15,26 +20,76 @@ bot = telebot.TeleBot(os.getenv("TG_TOKEN"))
 def send_welcome(message):
     bot.reply_to(message, "Привет! Я ваш Telegram-бот. Чем могу помочь?")
     name = message.from_user.first_name
-    last_name = message.from_user.last_name
-    username = message.from_user.username
     user_id = message.from_user.id
-    print(f"{name=} {last_name=} {username=} {user_id=}")
     create_user(name=name, tg_id=user_id)
+
+
+@bot.message_handler(commands=["help"])
+def send_help(message):
+    bot.reply_to(
+        message,
+        """
+        Введите команду:
+        /add для добавления новых переводов
+        /quiz для запуска квиза
+        /settings для настройки бота
+        """
+    )
 
 
 @bot.message_handler(commands=["quiz"])
 def launch_quiz(message):
     bot.reply_to(message, "Вы запустили квиз!")
 
+    words = get_translation(message.chat.id)
+    word_id = words["id"]
+    en_word = words["en_word"]
+    ru_word_1 = words["option_1"]
+    ru_word_2 = words["option_2"]
+    ru_word_3 = words["option_3"]
+
+    # Создаем клавиатуру - кнопки в сообщении
+    markup = InlineKeyboardMarkup()
+    btn_1 = IBtn(ru_word_1, callback_data=f"{word_id}:{ru_word_1}")
+    btn_2 = IBtn(ru_word_2, callback_data=f"{word_id}:{ru_word_2}")
+    btn_3 = IBtn(ru_word_3, callback_data=f"{word_id}:{ru_word_3}")
+
+    markup.add(btn_1)
+    markup.add(btn_2)
+    markup.add(btn_3)
+
+    bot.send_message(
+        message.chat.id,
+        parse_mode="Markdown",
+        text=f"Как переводится *{en_word}* ?",
+        reply_markup=markup
+    )
+
+
+@bot.callback_query_handler(func=lambda call: True)
+def handle_callback(call):
+    translation_id, ru_text = call.data.split(":")
+    if validate_translation(translation_id=int(translation_id), ru_text=ru_text):
+        bot.edit_message_text(
+            text="Правильный ответ! 🎉",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=None,
+        )
+    else:
+        bot.edit_message_text(
+            text="Неправильный ответ. 😢",
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=None,
+        )
+
 
 if __name__ == "__main__":
     init_db()
-    # with Session() as session:
-    #     users = session.query(Users).all()
-    #     if not users:
-    #         print("users not found!")
-    #     for user in users:
-    #         print(f"{user.user_tg_id=} {user.user_name=}")
 
     print("Бот запущен...")
     bot.polling(none_stop=True)
+
+
+# TODO поправить отображение вопроса после отправки ответа пользователем

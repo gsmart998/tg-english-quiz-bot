@@ -9,7 +9,7 @@ Base = declarative_base()
 class Users(Base):
     __tablename__ = "users"
     id = Column(Integer, primary_key=True)
-    user_tg_id = Column(String(64), unique=True)
+    user_tg_id = Column(String(64), unique=True)  # TODO исправить на Integer
     user_name = Column(String(128))
     user_score = Column(Integer, default=0)
 
