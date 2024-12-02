@@ -1,5 +1,8 @@
-from telebot.types import CallbackQuery
-
+from telebot.types import (
+    InlineKeyboardMarkup,
+    InlineKeyboardButton as IBtn,
+    CallbackQuery,
+)
 from app.tg_bot import bot
 from database.database import init_db
 from database.crud import (
@@ -72,14 +75,23 @@ def handle_all_messages(message):
 # handle user answers to quiz
 @bot.callback_query_handler(func=lambda call: True)
 def handle_callback(call: CallbackQuery):
-    message_text = validate_quiz(call_data=call.data)
+    call_data = call.data
 
-    bot.edit_message_text(
-        text=message_text,
-        chat_id=call.message.chat.id,
-        message_id=call.message.message_id,
-        reply_markup=None,
-    )
+    # handle new quiz button click
+    if call_data == "/quiz":
+        launch_quiz(message=call.message)
+    else:
+        # handle user answer button click
+        message_text = validate_quiz(call_data=call_data)
+        markup = InlineKeyboardMarkup()
+        markup.add(IBtn(text="Ещё квиз", callback_data="/quiz"))
+
+        bot.edit_message_text(
+            text=message_text,
+            chat_id=call.message.chat.id,
+            message_id=call.message.message_id,
+            reply_markup=markup,
+        )
 
 
 if __name__ == "__main__":
@@ -90,5 +102,7 @@ if __name__ == "__main__":
     bot.polling(non_stop=True)
 
 
+# done кнопка под ответом квиза для рестарта
+# TODO scheduler
 # TODO миграция БД
 # TODO очки за правильные ответы
