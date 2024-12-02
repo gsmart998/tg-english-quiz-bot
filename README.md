@@ -15,7 +15,7 @@ table_name = "translations"
 table_name = "quiz_results"
 | id | user_id | translation_id | positive_tries | negative_tries |
 
-Еще есть таблица с пользователей:
+Еще есть таблица пользователей:
 
 table_name = "users"
 | id | tg_user_id | user_name | user_score |
