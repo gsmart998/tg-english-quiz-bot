@@ -3,6 +3,7 @@ import random
 from telebot.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton as IBtn,
+    CallbackQuery,
 )
 
 from database.crud import (
@@ -10,15 +11,16 @@ from database.crud import (
     get_translation_by_id,
 )
 from app.logger_config import get_logger
+from app.tg_bot import bot
 from app.app_config import BUTTONS_NUM
 
 
 log = get_logger(__name__)  # get configured logger
 
 
-def start_quiz(tg_id: int) -> tuple | None:
+def start_quiz(tg_id: int):
     """Fetch user's translations from DB and prepare it.
-    Return message_text and reply_markup
+    Then sends the prepared quiz to the user.
     """
     log.info(f"User {tg_id=} started the quiz")
 
@@ -41,14 +43,20 @@ def start_quiz(tg_id: int) -> tuple | None:
 
     message_text = f"Как переводится *'{quiz_words["en_word"]}'* ?"
 
-    return message_text, markup
+    bot.send_message(
+        chat_id=tg_id,
+        text=message_text,
+        reply_markup=markup
+    )
+    log.info(f"Quiz for user {tg_id=} was successfully sent")
 
 
-def validate_quiz(call_data: str) -> str:
-    """Validate user's answer and return message_text based on it
+def validate_quiz(call: CallbackQuery):
+    """Validate user answer and reply on it.
     """
-    translation_id, user_answer = call_data.split(":")
+    log.info(f"User {call.message.chat.id} answered the question")
 
+    translation_id, user_answer = call.data.split(":")
     translation = get_translation_by_id(translation_id=translation_id)
 
     message_text = f"Как переводится *'{
@@ -56,8 +64,18 @@ def validate_quiz(call_data: str) -> str:
 
     if user_answer == translation["ru_text"]:
         message_text += f"✅\nОтлично, вы заработали 1 балл! 🎉"
+        log.info(f"User {call.message.chat.id} answered correctly")
 
     else:
         message_text += f"❌\nПравильный ответ: *'{translation["ru_text"]}*'"
+        log.info(f"User {call.message.chat.id} answered incorrectly")
 
-    return message_text
+    markup = InlineKeyboardMarkup()
+    markup.add(IBtn(text="Ещё квиз", callback_data="/quiz"))
+
+    bot.edit_message_text(
+        text=message_text,
+        chat_id=call.message.chat.id,
+        message_id=call.message.message_id,
+        reply_markup=markup,
+    )
