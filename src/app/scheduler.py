@@ -17,21 +17,25 @@ jobstores = {'default': SQLAlchemyJobStore(url=os.getenv("DATABASE_URL"))}
 scheduler = BackgroundScheduler(jobstores=jobstores)
 
 
-def test():
-    print("hello, world")
-
-
-def schedule_user_job(user_id: int):
+def schedule_user_job(user_id: int, timeout: int = 1):
     job_id = f"user_{user_id}_job"
-
     scheduler.add_job(
         func=start_quiz,
         trigger='interval',
-        seconds=30,
+        hours=timeout,
         id=job_id,
         args=[user_id],
         replace_existing=True,
     )
 
-# scheduler.remove_job
-# schedule_user_job(user_id=6365321203)
+
+def disable_user_job(user_id: int):
+    job_id = f"user_{user_id}_job"
+    scheduler.remove_job(job_id=job_id)
+
+
+def check_user_job(user_id: int) -> bool:
+    job_id = f"user_{user_id}_job"
+    if scheduler.get_job(job_id=job_id) is None:
+        return False
+    return True

@@ -1,11 +1,13 @@
 import re
 
 from telebot.types import (
+    ReplyKeyboardMarkup,
+    KeyboardButton as Btn,
     InlineKeyboardMarkup,
     InlineKeyboardButton as IBtn,
     CallbackQuery,
 )
-from app.tg_bot import bot
+from app.tg_bot import bot, bot_commands
 from database.database import init_db
 from database.crud import (
     create_user,
@@ -13,7 +15,12 @@ from database.crud import (
 )
 from app.logger_config import get_logger
 from app.quiz import start_quiz, validate_quiz
-from app.scheduler import scheduler, schedule_user_job
+from app.scheduler import (
+    scheduler,
+    schedule_user_job,
+    check_user_job,
+    disable_user_job,
+)
 
 log = get_logger(__name__)  # get configured logger
 
@@ -23,9 +30,15 @@ def send_welcome(message):
     name = message.from_user.first_name
     tg_id = message.from_user.id
     create_user(name=name, tg_id=tg_id)
-    bot.reply_to(
-        message,
-        f"Перед началом работы с ботом необходимо добавить ваши переводы\n/add для добавления переводов\n/help для помощи"
+
+    markup = ReplyKeyboardMarkup(resize_keyboard=True)
+    markup.row(Btn("/add"), Btn("/quiz"))
+    markup.row(Btn("/settings"), Btn("/help"))
+
+    bot.send_message(
+        chat_id=tg_id,
+        text=f"Перед началом работы с ботом необходимо добавить ваши переводы\n/add для добавления переводов\n/help для помощи",
+        reply_markup=markup,
     )
 
 
@@ -40,11 +53,30 @@ def send_help(message):
 @bot.message_handler(commands=["settings"])
 def send_settings(message):
     markup = InlineKeyboardMarkup()
-    markup.add(IBtn(text="Включить авто квиз", callback_data="/settings:auto"))
+    if check_user_job(user_id=message.chat.id):
+        markup.add(
+            IBtn(text="Выключить авто квиз", callback_data="/settings:auto_off")
+        )
+        markup.add(
+            IBtn(text="Изменить интервал между квизами:", callback_data=" "),
+        )
+        markup.row(
+            IBtn(text="1 ч.", callback_data="/settings:auto_on_1h"),
+            IBtn(text="2 ч.", callback_data="/settings:auto_on_2h"),
+            IBtn(text="4 ч.", callback_data="/settings:auto_on_4h"),
+            IBtn(text="6 ч.", callback_data="/settings:auto_on_6h"),
+        )
+
+    else:
+        markup.add(
+            IBtn(
+                text="Включить авто квиз", callback_data="/settings:auto_on_1h"
+            )
+        )
 
     bot.send_message(
         chat_id=message.chat.id,
-        text="Меню для настройки бота",
+        text="Здесь вы можете включить/выключить автоматическую рассылку квизов и изменить интервал отправки:",
         reply_markup=markup,
     )
 
@@ -90,18 +122,35 @@ def handle_callback(call: CallbackQuery):
     # handle new quiz button click
     if call_data == "/quiz":
         start_quiz(tg_id=tg_id)
+        bot.edit_message_reply_markup(
+            chat_id=tg_id,
+            message_id=call.message.id,
+            reply_markup=None,
+        )
 
     # handle user answer button click
     elif re.match(r"^\d+:.+$", call_data):
         validate_quiz(call=call)
 
-    # handle settings button click
-    elif call_data == "/settings:auto":
-        schedule_user_job(user_id=tg_id)
-        bot.send_message(
+    # handle settings auto quiz on
+    elif call_data[:-3] == "/settings:auto_on":
+        timeout = int(call_data[-2:-1])
+        schedule_user_job(user_id=tg_id, timeout=timeout)
+        bot.edit_message_text(
             chat_id=tg_id,
-            text="Вы подписались на автоматическую рассылку квиза"
+            message_id=call.message.id,
+            text="🔥 Вы подписались на рассылку квизов!"
         )
+
+    # handle settings auto quiz off
+    elif call_data == "/settings:auto_off":
+        disable_user_job(user_id=tg_id)
+        bot.edit_message_text(
+            chat_id=tg_id,
+            message_id=call.message.id,
+            text="😞 Вы отключили рассылку квизов."
+        )
+
     else:
         log.info(f"Unsupported callback query: {call_data}")
 
@@ -110,12 +159,6 @@ if __name__ == "__main__":
     init_db()
     scheduler.start()
 
-    # bot.set_my_commands()  # add commands list
+    bot.set_my_commands(bot_commands)
     log.info("Бот запущен...")
     bot.polling(non_stop=True)
-
-
-# done кнопка под ответом квиза для рестарта
-# TODO scheduler
-# TODO миграция БД
-# TODO очки за правильные ответы
