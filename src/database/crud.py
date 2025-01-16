@@ -40,17 +40,6 @@ def get_translation_by_id(translation_id: int) -> dict | None:
     return translation
 
 
-# def check_translation_by_text(en_text: str) -> bool:
-#     """Check if translation exists by it's en_text
-#     """
-#     with Session() as session:
-#         return session.query(
-#             session.query(Translations)
-#             .filter(Translations.en_text == en_text)
-#             .exists()
-#         ).scalar()
-
-
 def get_translations_by_user(tg_id: int) -> dict | None:
     """Fetch user's translations and return it as dict.
     Number of options is configured in app_config.py, default num = 3.
