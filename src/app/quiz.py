@@ -9,6 +9,7 @@ from telebot.types import (
 from database.crud import (
     get_translations_by_user,
     get_translation_by_id,
+    update_user_score,
 )
 from app.logger_config import get_logger
 from app.tg_bot import bot
@@ -65,6 +66,7 @@ def validate_quiz(call: CallbackQuery):
     if user_answer == translation["ru_text"]:
         message_text += f"✅\nОтлично, вы заработали 1 балл! 🎉"
         log.info(f"User {call.message.chat.id} answered correctly")
+        update_user_score(tg_id=call.message.chat.id, num=1)
 
     else:
         message_text += f"❌\nПравильный ответ: *'{translation["ru_text"]}*'"

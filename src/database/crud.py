@@ -17,7 +17,7 @@ def create_user(name: str, tg_id: int):
             new_user = Users(tg_id=tg_id, name=name)
             session.add(new_user)
             session.commit()
-            log.info("User created!")
+            log.info(f"User created {tg_id=}")
 
         else:
             log.info(f"User with {tg_id=} already exist!")
@@ -128,3 +128,18 @@ def add_translations(translations: dict[str, str], tg_id: int):
             f"For user {tg_id=} added new translations: {
                 len(new_user_translations)}"
         )
+
+
+def get_user_score(tg_id: int) -> int | None:
+    with Session() as session:
+        return session.query(Users.score).filter(Users.tg_id == tg_id).scalar()
+
+
+def update_user_score(tg_id: int, num: int) -> bool:
+    with Session() as session:
+        user = session.query(Users).filter(Users.tg_id == tg_id).one_or_none()
+        if user:
+            user.score += num
+            session.commit()
+            return True
+        return False

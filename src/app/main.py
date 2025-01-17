@@ -12,6 +12,7 @@ from database.database import init_db
 from database.crud import (
     create_user,
     add_translations,
+    get_user_score,
 )
 from app.logger_config import get_logger
 from app.quiz import start_quiz, validate_quiz
@@ -32,7 +33,7 @@ def send_welcome(message):
     create_user(name=name, tg_id=tg_id)
 
     markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row(Btn("/add"), Btn("/quiz"))
+    markup.row(Btn("/add"), Btn("/quiz"), Btn("/score"))
     markup.row(Btn("/settings"), Btn("/help"))
 
     bot.send_message(
@@ -55,10 +56,11 @@ def send_settings(message):
     markup = InlineKeyboardMarkup()
     if check_user_job(user_id=message.chat.id):
         markup.add(
-            IBtn(text="Выключить авто квиз", callback_data="/settings:auto_off")
+            IBtn(text="🚫 Выключить авто квиз",
+                 callback_data="/settings:auto_off")
         )
         markup.add(
-            IBtn(text="Изменить интервал между квизами:", callback_data=" "),
+            IBtn(text="⏲️ Изменить интервал отправки:", callback_data=" "),
         )
         markup.row(
             IBtn(text="1 ч.", callback_data="/settings:auto_on_1h"),
@@ -70,7 +72,7 @@ def send_settings(message):
     else:
         markup.add(
             IBtn(
-                text="Включить авто квиз", callback_data="/settings:auto_on_1h"
+                text="🔁 Включить авто квиз", callback_data="/settings:auto_on_1h"
             )
         )
 
@@ -84,6 +86,15 @@ def send_settings(message):
 @bot.message_handler(commands=["quiz"])
 def send_quiz(message):
     start_quiz(tg_id=message.chat.id)
+
+
+@bot.message_handler(commands=["score"])
+def send_score(message):
+    score = get_user_score(tg_id=message.chat.id)
+    bot.send_message(
+        chat_id=message.chat.id,
+        text=f"Ваш счет: *{score}*"
+    )
 
 
 @bot.message_handler(func=lambda message: True)
@@ -160,5 +171,5 @@ if __name__ == "__main__":
     scheduler.start()
 
     bot.set_my_commands(bot_commands)
-    log.info("Бот запущен...")
+    log.info("The bot is running...")
     bot.polling(non_stop=True)

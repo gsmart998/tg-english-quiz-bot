@@ -22,7 +22,7 @@ except Exception as ex:
 # create tables
 def init_db():
     Base.metadata.create_all(bind=engine)
-    log.info("БД инициализирована!")
+    log.info("The database has been initialized")
 
 
 Session = sessionmaker(bind=engine, autocommit=False, autoflush=False)

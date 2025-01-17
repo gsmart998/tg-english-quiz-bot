@@ -13,4 +13,5 @@ bot_commands = [
     BotCommand("add", "Добавить новые переводы"),
     BotCommand("settings", "Настройка бота"),
     BotCommand("quiz", "Запуск нового квиза"),
+    BotCommand("score", "Показать баланс"),
 ]
