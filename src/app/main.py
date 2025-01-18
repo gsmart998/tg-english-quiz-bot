@@ -1,8 +1,6 @@
 import re
 
 from telebot.types import (
-    ReplyKeyboardMarkup,
-    KeyboardButton as Btn,
     InlineKeyboardMarkup,
     InlineKeyboardButton as IBtn,
     CallbackQuery,
@@ -32,22 +30,23 @@ def send_welcome(message):
     tg_id = message.from_user.id
     create_user(name=name, tg_id=tg_id)
 
-    markup = ReplyKeyboardMarkup(resize_keyboard=True)
-    markup.row(Btn("/add"), Btn("/quiz"), Btn("/score"))
-    markup.row(Btn("/settings"), Btn("/help"))
-
+    text = "Перед началом работы с ботом необходимо добавить ваши переводы\n"
+    text += "/help - для помощи."
     bot.send_message(
         chat_id=tg_id,
-        text=f"Перед началом работы с ботом необходимо добавить ваши переводы\n/add для добавления переводов\n/help для помощи",
-        reply_markup=markup,
+        text=text,
     )
 
 
 @bot.message_handler(commands=["help"])
 def send_help(message):
+    help_text = "Вот список доступных комманд:\n"
+    commands = bot.get_my_commands()
+    for command in commands:
+        help_text += f"/{command.command} - {command.description}\n"
     bot.send_message(
         chat_id=message.chat.id,
-        text="Введите команду:\n/add для добавления новых переводов\n/quiz для запуска квиза\n/settings для настройки бота\n"
+        text=help_text,
     )
 
 
@@ -70,16 +69,18 @@ def send_settings(message):
         )
 
     else:
-        markup.add(
-            IBtn(
-                text="🔁 Включить авто квиз", callback_data="/settings:auto_on_1h"
-            )
+        button = IBtn(
+            text="🔁 Включить авто квиз", callback_data="/settings:auto_on_1h"
         )
+        markup.add(button)
+
+    text = "Здесь вы можете включить/выключить автоматическую рассылку квизов "
+    text += "и изменить интервал отправки:"
 
     bot.send_message(
         chat_id=message.chat.id,
-        text="Здесь вы можете включить/выключить автоматическую рассылку квизов и изменить интервал отправки:",
         reply_markup=markup,
+        text=text,
     )
 
 
@@ -99,6 +100,17 @@ def send_score(message):
 
 @bot.message_handler(func=lambda message: True)
 def handle_all_messages(message):
+    if message.text == "/add":
+        text = "Для добавления новых слов отправьте команду в следующем формате:\n"
+        text += "```Команда\n/add\nen_word_1  ru_word_1\nen_word_2  ru_word_2```\n"
+        text += "*Внимание!* Между словом и его переводом должно быть *2 пробела!*"
+
+        bot.send_message(
+            chat_id=message.chat.id,
+            text=text,
+        )
+        return
+
     # handle multiline commands
     full_text = message.text
     index = full_text.find("\n")
@@ -107,16 +119,27 @@ def handle_all_messages(message):
     if command == "/add":
         words_to_add = {}
         for row in text.split("\n"):
-            if len(row) < 4:  # skip empty row
+            if len(row) < 4 or "  " not in row:  # skip empty or incorrect row
                 continue
-            en_text, ru_text = row.split("  ")
+            try:
+                en_text, ru_text = row.split("  ", maxsplit=1)
+            except ValueError:
+                continue
+
             words_to_add[en_text] = ru_text
 
         log.info(f"{words_to_add=}")
 
-        add_translations(
-            translations=words_to_add,
-            tg_id=message.chat.id,
+        if len(words_to_add) > 0:
+            add_translations(
+                translations=words_to_add,
+                tg_id=message.chat.id,
+            )
+            return
+
+        bot.send_message(
+            chat_id=message.chat.id,
+            text=f"Неверный формат!\n/add для справки"
         )
 
     else:
@@ -173,3 +196,5 @@ if __name__ == "__main__":
     bot.set_my_commands(bot_commands)
     log.info("The bot is running...")
     bot.polling(non_stop=True)
+
+# TODO add update - help command + sep support
