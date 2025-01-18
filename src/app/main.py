@@ -20,6 +20,11 @@ from app.scheduler import (
     check_user_job,
     disable_user_job,
 )
+from app.text_templates import (
+    MSG_ADD_INFO,
+    MSG_WELCOME,
+    MSG_SETTINGS,
+)
 
 log = get_logger(__name__)  # get configured logger
 
@@ -30,11 +35,9 @@ def send_welcome(message):
     tg_id = message.from_user.id
     create_user(name=name, tg_id=tg_id)
 
-    text = "Перед началом работы с ботом необходимо добавить ваши переводы\n"
-    text += "/help - для помощи."
     bot.send_message(
         chat_id=tg_id,
-        text=text,
+        text=MSG_WELCOME,
     )
 
 
@@ -74,13 +77,10 @@ def send_settings(message):
         )
         markup.add(button)
 
-    text = "Здесь вы можете включить/выключить автоматическую рассылку квизов "
-    text += "и изменить интервал отправки:"
-
     bot.send_message(
         chat_id=message.chat.id,
         reply_markup=markup,
-        text=text,
+        text=MSG_SETTINGS,
     )
 
 
@@ -101,13 +101,9 @@ def send_score(message):
 @bot.message_handler(func=lambda message: True)
 def handle_all_messages(message):
     if message.text == "/add":
-        text = "Для добавления новых слов отправьте команду в следующем формате:\n"
-        text += "```Команда\n/add\nen_word_1  ru_word_1\nen_word_2  ru_word_2```\n"
-        text += "*Внимание!* Между словом и его переводом должно быть *2 пробела!*"
-
         bot.send_message(
             chat_id=message.chat.id,
-            text=text,
+            text=MSG_ADD_INFO,
         )
         return
 
@@ -145,7 +141,7 @@ def handle_all_messages(message):
     else:
         bot.reply_to(
             message,
-            f"Неизвестная команда!\n/help для помощи."
+            f"Неизвестная команда!\n/help для справки."
         )
 
 
