@@ -7,7 +7,7 @@ from apscheduler.jobstores.sqlalchemy import SQLAlchemyJobStore
 from database.database import Session
 from app.logger_config import get_logger
 from app.tg_bot import bot
-from app.quiz import start_quiz
+from app.handlers import start_quiz
 
 log = get_logger(__name__)  # get configured logger
 

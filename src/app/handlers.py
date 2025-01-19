@@ -14,6 +14,7 @@ from database.crud import (
 from app.logger_config import get_logger
 from app.tg_bot import bot
 from app.app_config import BUTTONS_NUM
+from app.text_templates import MSG_START_QUIZ_ERROR
 
 
 log = get_logger(__name__)  # get configured logger
@@ -27,8 +28,11 @@ def start_quiz(tg_id: int):
 
     quiz_words = get_translations_by_user(tg_id=tg_id)
     if quiz_words is None:
-        # TODO handle this case
-        log.error("User needs to add more translations!")
+        log.error("User does not have enough translations to start the quiz")
+        bot.send_message(
+            chat_id=tg_id,
+            text=MSG_START_QUIZ_ERROR,
+        )
         return
 
     # create and shuffle list with fetched translations
@@ -55,8 +59,6 @@ def start_quiz(tg_id: int):
 def validate_quiz(call: CallbackQuery):
     """Validate user answer and reply on it.
     """
-    log.info(f"User {call.message.chat.id} answered the question")
-
     translation_id, user_answer = call.data.split(":")
     translation = get_translation_by_id(translation_id=translation_id)
 

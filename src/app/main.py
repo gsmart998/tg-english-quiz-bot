@@ -13,7 +13,7 @@ from database.crud import (
     get_user_score,
 )
 from app.logger_config import get_logger
-from app.quiz import start_quiz, validate_quiz
+from app import handlers
 from app.scheduler import (
     scheduler,
     schedule_user_job,
@@ -86,7 +86,7 @@ def send_settings(message):
 
 @bot.message_handler(commands=["quiz"])
 def send_quiz(message):
-    start_quiz(tg_id=message.chat.id)
+    handlers.start_quiz(tg_id=message.chat.id)
 
 
 @bot.message_handler(commands=["score"])
@@ -151,7 +151,7 @@ def handle_callback(call: CallbackQuery):
     tg_id = call.message.chat.id
     # handle new quiz button click
     if call_data == "/quiz":
-        start_quiz(tg_id=tg_id)
+        handlers.start_quiz(tg_id=tg_id)
         bot.edit_message_reply_markup(
             chat_id=tg_id,
             message_id=call.message.id,
@@ -160,7 +160,7 @@ def handle_callback(call: CallbackQuery):
 
     # handle user answer button click
     elif re.match(r"^\d+:.+$", call_data):
-        validate_quiz(call=call)
+        handlers.validate_quiz(call=call)
 
     # handle settings auto quiz on
     elif call_data[:-3] == "/settings:auto_on":
@@ -192,5 +192,3 @@ if __name__ == "__main__":
     bot.set_my_commands(bot_commands)
     log.info("The bot is running...")
     bot.polling(non_stop=True)
-
-# TODO add update - help command + sep support

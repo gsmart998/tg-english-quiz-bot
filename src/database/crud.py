@@ -9,22 +9,24 @@ log = get_logger(__name__)  # get configured logger
 
 
 def create_user(name: str, tg_id: int):
+    """Creates new user in the database if given Telegram id does not exist.
+    """
     with Session() as session:
-        # TODO change to EXISTS request
-        user = session.query(Users).filter(
-            Users.tg_id == tg_id).one_or_none()
-        if user is None:
+        user_exists = session.query(
+            session.query(Users).filter(Users.tg_id == tg_id).exists()
+        ).scalar()
+        if not user_exists:
             new_user = Users(tg_id=tg_id, name=name)
             session.add(new_user)
             session.commit()
-            log.info(f"User created {tg_id=}")
+            log.info(f"User created: {tg_id=}, {name=}")
 
         else:
             log.info(f"User with {tg_id=} already exist!")
 
 
 def get_translation_by_id(translation_id: int) -> dict | None:
-    """Fetch one translation by id and return it as dict
+    """Fetch one translation by id and return it as dict.
     """
     with Session() as session:
         row = session.query(Translations).filter(
@@ -43,6 +45,7 @@ def get_translation_by_id(translation_id: int) -> dict | None:
 def get_translations_by_user(tg_id: int) -> dict | None:
     """Fetch user's translations and return it as dict.
     Number of options is configured in app_config.py, default num = 3.
+    Return None if user does not have enough translations to start the quiz.
 
     {
     'id': translation_id,
@@ -76,6 +79,14 @@ def get_translations_by_user(tg_id: int) -> dict | None:
 
 
 def add_translations(translations: dict[str, str], tg_id: int):
+    """
+    Add new translations to the database and links them to the specified user.
+
+    Steps:
+    1. Checks which translations already exist in the database.
+    2. Adds new translations that are not present.
+    3. Links all translations (existing and new) to the user, avoiding duplicates.
+    """
     with Session() as session:
         # find existing translations in db
         existing_translations = session.query(Translations).filter(
