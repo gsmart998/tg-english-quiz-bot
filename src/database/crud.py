@@ -95,7 +95,6 @@ def add_translations(translations: dict[str, str], tg_id: int):
 
         existing_en_texts = {t.en_text for t in existing_translations}
         existing_translation_ids = {t.id for t in existing_translations}
-        log.info(f"{type(existing_en_texts)=}")
 
         # add new translations
         new_translations = [
