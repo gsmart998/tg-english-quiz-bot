@@ -8,7 +8,7 @@ from telebot.types import (
 
 from database import crud
 from app.logger_config import get_logger
-from app.bot_instance import bot
+from app.bot import bot
 from app.app_config import BUTTONS_NUM
 from app.text_templates import MSG_START_QUIZ_ERROR
 from app.scheduler import scheduler
@@ -24,7 +24,7 @@ def start_quiz(tg_id: int):
 
     quiz_words = crud.get_translations_by_user(tg_id=tg_id)
     if quiz_words is None:
-        log.error("User does not have enough translations to start the quiz")
+        log.warning("User does not have enough translations to start the quiz")
         bot.send_message(
             chat_id=tg_id,
             text=MSG_START_QUIZ_ERROR,

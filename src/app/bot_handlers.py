@@ -5,7 +5,7 @@ from telebot.types import (
     CallbackQuery,
 )
 
-from app.bot_instance import bot
+from app.bot import bot
 from app import text_templates, handlers
 from database.crud import (
     create_user,
@@ -19,11 +19,11 @@ log = get_logger(__name__)  # get configured logger
 
 bot_commands = [
     BotCommand("start", "Начать работу с ботом"),
-    BotCommand("help", "Список доступных команд"),
-    BotCommand("add", "Добавить новые переводы"),
-    BotCommand("settings", "Настройка бота"),
     BotCommand("quiz", "Запуск нового квиза"),
     BotCommand("score", "Показать баланс"),
+    BotCommand("add", "Добавить новые переводы"),
+    BotCommand("settings", "Настройка бота"),
+    BotCommand("help", "Список доступных команд"),
 ]
 
 
