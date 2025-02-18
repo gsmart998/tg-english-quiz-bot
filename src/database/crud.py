@@ -59,10 +59,8 @@ def get_translations_by_user(tg_id: int) -> dict | None:
     with Session() as session:
         translations = session.query(Translations).join(
             UserTranslations, UserTranslations.translation_id == Translations.id
-        ).join(
-            Users, Users.tg_id == UserTranslations.user_id
         ).filter(
-            Users.tg_id == tg_id
+            UserTranslations.user_id == tg_id
         ).order_by(func.random()).limit(BUTTONS_NUM).all()
 
         if len(translations) < BUTTONS_NUM:
