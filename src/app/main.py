@@ -1,8 +1,8 @@
-from app.bot import bot
-from app.bot_handlers import bot_commands
-from database.database import init_db
-from app.logger_config import get_logger
-from app.scheduler import scheduler
+from src.app.bot import bot
+from src.app.bot_handlers import bot_commands
+from src.database.database import init_db
+from src.app.logger_config import get_logger
+from src.app.scheduler import scheduler
 
 
 log = get_logger(__name__)  # get configured logger

@@ -6,12 +6,12 @@ from telebot.types import (
     CallbackQuery,
 )
 
-from database import crud
-from app.logger_config import get_logger
-from app.bot import bot
-from app.app_config import BUTTONS_NUM
-from app.text_templates import MSG_START_QUIZ_ERROR
-from app.scheduler import scheduler
+from src.database import crud
+from src.app.logger_config import get_logger
+from src.app.bot import bot
+from src.app.app_config import BUTTONS_NUM
+from src.app.text_templates import MSG_START_QUIZ_ERROR
+from src.app.scheduler import scheduler
 
 log = get_logger(__name__)  # get configured logger
 

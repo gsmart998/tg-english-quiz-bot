@@ -5,13 +5,13 @@ from telebot.types import (
     CallbackQuery,
 )
 
-from app.bot import bot
-from app import text_templates, handlers
-from database.crud import (
+from src.app.bot import bot
+from src.app import text_templates, handlers
+from src.database.crud import (
     create_user,
     get_user_score,
 )
-from app.logger_config import get_logger
+from src.app.logger_config import get_logger
 
 
 log = get_logger(__name__)  # get configured logger

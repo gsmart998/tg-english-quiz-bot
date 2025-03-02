@@ -1,9 +1,9 @@
 from sqlalchemy import func
 
-from database.models import Users, Translations, UserTranslations
-from database.database import Session
-from app.logger_config import get_logger
-from app.app_config import BUTTONS_NUM
+from src.database.models import Users, Translations, UserTranslations
+from src.database.database import Session
+from src.app.logger_config import get_logger
+from src.app.app_config import BUTTONS_NUM
 
 log = get_logger(__name__)  # get configured logger
 
