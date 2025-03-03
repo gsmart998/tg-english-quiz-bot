@@ -76,7 +76,7 @@ def get_translations_by_user(tg_id: int) -> dict | None:
     return quiz_words
 
 
-def add_translations(translations: dict[str, str], tg_id: int):
+def add_translations(translations: dict[str, str], tg_id: int) -> int:
     """
     Add new translations to the database and links them to the specified user.
 
@@ -84,6 +84,7 @@ def add_translations(translations: dict[str, str], tg_id: int):
     1. Checks which translations already exist in the database.
     2. Adds new translations that are not present.
     3. Links all translations (existing and new) to the user, avoiding duplicates.
+    Return num of new added user tranlations.
     """
     with Session() as session:
         # find existing translations in db
@@ -136,6 +137,7 @@ def add_translations(translations: dict[str, str], tg_id: int):
             f"For user {tg_id=} added new translations: {
                 len(new_user_translations)}"
         )
+        return len(new_user_translations)
 
 
 def get_user_score(tg_id: int) -> int | None:

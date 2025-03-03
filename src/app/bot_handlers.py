@@ -76,20 +76,20 @@ def send_score(message):
 
 @bot.message_handler(func=lambda message: True)
 def handle_all_messages(message):
-    if message.text == "/add":
+    text = message.text
+    if text == "/add":
         bot.send_message(
             chat_id=message.chat.id,
             text=text_templates.MSG_ADD_INFO,
         )
-        return
 
-    # handle multiline /add commands
-    full_text = message.text
-    index = full_text.find("\n")
-    command = full_text[:index]
-    text = full_text[index:]
-    if command == "/add":
+    elif text.startswith("/add\n"):
+        # handle multiline /add commands
+        full_text = message.text
+        index = full_text.find("\n")
+        text = full_text[index:]
         handlers.add_translations(text=text, tg_id=message.chat.id)
+
     else:
         bot.reply_to(
             message,

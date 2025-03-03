@@ -128,16 +128,16 @@ def add_translations(text: str, tg_id: int):
     log.info(f"{words_to_add=}")
 
     if len(words_to_add) > 0:
-        crud.add_translations(
+        new_added_translations_num = crud.add_translations(
             translations=words_to_add,
             tg_id=tg_id,
         )
-        return
+        text = f"Добалено новых переводов: *{new_added_translations_num}*"
 
-    bot.send_message(
-        chat_id=tg_id,
-        text=f"Неверный формат!\n/add для справки"
-    )
+    else:
+        text = "Неверный формат!\n/add для справки."
+
+    bot.send_message(chat_id=tg_id, text=text)
 
 
 def schedule_user_job(user_id: int, timeout: int = 1):
